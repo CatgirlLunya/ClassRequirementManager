@@ -23,14 +23,7 @@ class Program
     public static bool SaveDialog = false;
     static void Main()
     {
-        if (!DataManager.Load())
-        {
-            DataManager.Classes.Add(new("MAA-1001",3, new List<string>(), true));
-            DataManager.Classes.Add(new("MAA-1002",5, new List<string>(["MAA-1001"]), true));
-            DataManager.Classes.Add(new("MAA-1003",5, new List<string>(["MAA-1001"]), true));
-            DataManager.Classes.Add(new("MAA-1004",5, new List<string>(["MAA-1001", "MAA-1003"]), true));
-        }
-        
+        DataManager.Load();
         VeldridStartup.CreateWindowAndGraphicsDevice(
             new WindowCreateInfo(50, 50, 800, 800, WindowState.Normal, "Class Requirement Manager"),
             new GraphicsDeviceOptions(false, null, true, ResourceBindingModel.Default, true, true),

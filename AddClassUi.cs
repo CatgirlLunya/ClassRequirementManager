@@ -5,6 +5,7 @@ namespace ClassRequirementManager;
 
 public static class AddClassUi
 {
+    private static string _nameBuffer = "";
     private static string _codeBuffer = "";
     private static string _prereqBuffer = "";
     private static int _creditHours = 0;
@@ -20,26 +21,32 @@ public static class AddClassUi
             ImGui.Text("Class Name: ");
             ImGui.SameLine();
             ImGui.SetNextItemWidth(400 - ImGui.CalcTextSize("Class Name:    ").X);
-            ImGui.InputTextWithHint("", "Ex: ENG 1001 or ENG-1001", ref _codeBuffer, 8);
+            ImGui.InputTextWithHint("##name", "Ex: Calculus I", ref _nameBuffer, 40);
+            
+            ImGui.Text("Class Code: ");
+            ImGui.SameLine();
+            ImGui.SetNextItemWidth(400 - ImGui.CalcTextSize("Class Code:    ").X);
+            ImGui.InputTextWithHint("##code", "Ex: ENG 1001 or ENG-1001", ref _codeBuffer, 12);
             
             ImGui.Text("Class Credit Hours: ");
             ImGui.SameLine();
             ImGui.SetNextItemWidth(400 - ImGui.CalcTextSize("Class Credit Hours:    ").X);
-            ImGui.InputInt("##2", ref _creditHours, 0, 0, ImGuiInputTextFlags.CharsDecimal);
+            ImGui.InputInt("##hours", ref _creditHours, 0, 0, ImGuiInputTextFlags.CharsDecimal);
             
             ImGui.Text("Class Prerequisites: ");
             ImGui.SameLine();
             ImGui.SetNextItemWidth(400 - ImGui.CalcTextSize("Class Prerequisites:    ").X);
-            ImGui.InputTextWithHint("##3", "Ex: ENG 1001, ENG 1002", ref _prereqBuffer, 64);
+            ImGui.InputTextWithHint("##prereq", "Ex: ENG 1001, ENG 1002", ref _prereqBuffer, 64);
             
             ImGui.Text("Completed? ");
             ImGui.SameLine();
-            ImGui.Checkbox("##4", ref _completed);
+            ImGui.Checkbox("##done", ref _completed);
             
             if (ImGui.Button("Submit") && _codeBuffer.Length > 0 && _creditHours > 0)
             {
-                var record = new ClassRecord(_codeBuffer.Replace(' ', '-'), _creditHours, 
-                    _prereqBuffer.Replace(", ", ",").Replace(' ', '-').Split([',', ' ']).ToList(), _completed);
+                var record = new ClassRecord(_nameBuffer, _codeBuffer.Replace(' ', '-'), _creditHours, 
+                    _prereqBuffer.Replace(", ", ",").Replace(' ', '-').Split([',', ' ']).ToList().FindAll(s => s != " " && s != ""),
+                    _completed);
                 
                 DataManager.Classes.Add(record);
                 ImGui.CloseCurrentPopup();
