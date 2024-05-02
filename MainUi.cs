@@ -139,6 +139,35 @@ public static class MainUi
         }
         
         if (_addPrereq) AddPrereqUi.Open(ref _addPrereq, _prereqRecord);
+        
+        ImGui.SetNextWindowPos(ImGui.GetIO().DisplaySize / 2 - new Vector2(109F, 23F));
+        if (ImGui.BeginPopup("SavePopup", ImGuiWindowFlags.NoDecoration | ImGuiWindowFlags.NoMove))
+        {
+            ImGui.Text("Save Before Exiting?");
+            if (ImGui.Button("Save"))
+            {
+                DataManager.Save();
+                Program.Window!.Close();
+            }
+            ImGui.SameLine();
+            if (ImGui.Button("Cancel"))
+            {
+                ImGui.CloseCurrentPopup();
+            }
+            ImGui.SameLine();
+            if (ImGui.Button("Close Anyways"))
+            {
+                Program.Window!.SetCloseRequestedHandler(() => false);
+                Program.Window.Close();
+            }
+            ImGui.EndPopup();
+        }
+        
+        if (Program.SaveDialog)
+        {
+            ImGui.OpenPopup("SavePopup");
+            Program.SaveDialog = false;
+        }
         ImGui.Columns();
         ImGui.End();
         ImGui.PopStyleVar(3);

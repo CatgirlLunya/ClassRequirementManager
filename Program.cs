@@ -9,7 +9,7 @@ namespace ClassRequirementManager;
 
 class Program
 {
-    private static Sdl2Window? _window;
+    public static Sdl2Window? Window;
     private static GraphicsDevice? _gd;
     private static ImGuiController? _controller;
     private static CommandList? _cl;
@@ -19,6 +19,8 @@ class Program
     private static bool _addClass;
 
     private static Vector3 _clearColor = new(0.45f, 0.55f, 0.6f);
+
+    public static bool SaveDialog = false;
     static void Main()
     {
         if (!DataManager.Load())
@@ -33,32 +35,45 @@ class Program
             new WindowCreateInfo(50, 50, 800, 800, WindowState.Normal, "Class Requirement Manager"),
             new GraphicsDeviceOptions(false, null, true, ResourceBindingModel.Default, true, true),
             preferredBackend: GraphicsBackend.OpenGL,
-            out _window,
+            out Window,
             out _gd
         );
 
-        _window.Resized += () =>
+        Window.SetCloseRequestedHandler(() =>
         {
-            _gd.MainSwapchain.Resize((uint)_window.Width, (uint)_window.Height);
-            _controller.WindowResized(_window.Width, _window.Height);
-        };
-        _window.Closed += () =>
+            var loaded = DataManager.LoadClasses();
+            if (DataManager.Classes.Count != loaded.Count) goto NotEqual;
+            for (var i = 0; i < DataManager.Classes.Count; i++)
+            {
+                if (loaded[i] != DataManager.Classes[i]) goto NotEqual;
+            }
+
+            return false;
+            
+            NotEqual:
+            SaveDialog = true;
+
+            return true;
+        });
+
+        Window.Resized += () =>
         {
-            // TODO: Save popup
+            _gd.MainSwapchain.Resize((uint)Window.Width, (uint)Window.Height);
+            _controller.WindowResized(Window.Width, Window.Height);
         };
 
         _cl = _gd.ResourceFactory.CreateCommandList();
-        _controller = new ImGuiController(_gd, _gd.MainSwapchain.Framebuffer.OutputDescription, _window.Width,
-            _window.Height);
+        _controller = new ImGuiController(_gd, _gd.MainSwapchain.Framebuffer.OutputDescription, Window.Width,
+            Window.Height);
         
         var stopwatch = Stopwatch.StartNew();
-        while (_window.Exists)
+        while (Window.Exists)
         {
             float deltaTime = stopwatch.ElapsedTicks / (float)Stopwatch.Frequency;
             stopwatch.Restart();
 
-            InputSnapshot snapshot = _window.PumpEvents();
-            if (!_window.Exists) break;
+            InputSnapshot snapshot = Window.PumpEvents();
+            if (!Window.Exists) break;
             _controller.Update(deltaTime, snapshot);
 
             MainUi.Display();

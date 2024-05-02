@@ -11,9 +11,15 @@ public static class DataManager
     public static bool Load()
     {
         if (!File.Exists(BaseDirectory + "/" + Path)) return false;
-        var data = File.ReadAllText(BaseDirectory + "/" + Path);
-        Classes = JsonSerializer.Deserialize<List<ClassRecord>>(data)!;
+        Classes = LoadClasses();
         return true;
+    }
+
+    public static List<ClassRecord> LoadClasses()
+    {
+        if (!File.Exists(BaseDirectory + "/" + Path)) return [];
+        var data = File.ReadAllText(BaseDirectory + "/" + Path);
+        return JsonSerializer.Deserialize<List<ClassRecord>>(data) ?? [];
     }
 
     public static void Save()
