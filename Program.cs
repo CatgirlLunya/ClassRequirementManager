@@ -34,11 +34,18 @@ class Program
 
         Window.SetCloseRequestedHandler(() =>
         {
-            var loaded = DataManager.LoadClasses();
-            if (DataManager.Classes.Count != loaded.Count) goto NotEqual;
+            var loadClasses = DataManager.LoadClasses();
+            if (DataManager.Classes.Count != loadClasses.Count) goto NotEqual;
             for (var i = 0; i < DataManager.Classes.Count; i++)
             {
-                if (loaded[i] != DataManager.Classes[i]) goto NotEqual;
+                if (loadClasses[i] != DataManager.Classes[i]) goto NotEqual;
+            }
+
+            var loadedTracks = DataManager.LoadTracks();
+            if (DataManager.Tracks.Count != loadedTracks.Count) goto NotEqual;
+            for (var i = 0; i < DataManager.Tracks.Count; i++)
+            {
+                if (loadedTracks[i] != DataManager.Tracks[i]) goto NotEqual;
             }
 
             return false;

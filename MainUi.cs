@@ -6,7 +6,7 @@ namespace ClassRequirementManager;
 
 public static class MainUi
 {
-    private static bool _addClass, _addPrereq;
+    private static bool _addClass, _addPrereq, _addTrack;
     private static string _lastOpened = "", _lastClosed = "";
     private static ClassRecord _prereqRecord = null!;
 
@@ -19,6 +19,11 @@ public static class MainUi
                 {
                     DataManager.Save();
                 }
+
+                if (ImGui.MenuItem("Load Saved Data"))
+                {
+                    DataManager.Load();
+                }
                 ImGui.EndMenu();
             }
             if (ImGui.BeginMenu("Classes"))
@@ -27,22 +32,16 @@ public static class MainUi
                 ImGui.EndMenu();
             }
 
-            if (ImGui.BeginMenu("Requirements"))
+            if (ImGui.BeginMenu("Tracks"))
             {
-                if (ImGui.BeginMenu("Add Requirement"))
-                {
-                    ImGui.MenuItem("Strict Requirement");
-                    ImGui.MenuItem("Varied Requirement");
-                    ImGui.EndMenu();
-                }
-                ImGui.MenuItem("View Requirements");
-                ImGui.MenuItem("Assign Requirement to Major/Minor");
+                ImGui.MenuItem("Add Track", string.Empty, ref _addTrack);
                 ImGui.EndMenu();
             }
             ImGui.EndMenuBar();
         }
         
         if (_addClass) AddClassUi.Open(ref _addClass);
+        if (_addTrack) AddTrackUi.Open(ref _addTrack);
     }
     public static void Display()
     {
@@ -57,6 +56,8 @@ public static class MainUi
         MenuBar();
 
         ImGui.Columns(2);
+        
+        // Class column
         ImGui.Text("Classes Registered: ");
         for (var j = 0; j < DataManager.Classes.Count; j++)
         {
@@ -66,7 +67,6 @@ public static class MainUi
                 ImGui.SetNextItemOpen(true);
                 _lastOpened = "";
             }
-
             if (_lastClosed == record.Code)
             {
                 ImGui.SetNextItemOpen(false);
@@ -79,21 +79,20 @@ public static class MainUi
                 ImGui.SameLine();
                 ImGui.SetCursorPosX(ImGui.GetCursorPosX() + ImGui.GetContentRegionAvail().X - 50);
                 if (j == DataManager.Classes.Count - 1) ImGui.BeginDisabled();
-                if (ImGui.ArrowButton("##down" + record.Name, ImGuiDir.Down))
+                if (ImGui.ArrowButton("##down" + record.Code, ImGuiDir.Down))
                 {
-                    var temp = DataManager.Classes[j + 1];
-                    DataManager.Classes[j + 1] = record;
-                    DataManager.Classes[j] = temp;
+                    
+                    (DataManager.Classes[j + 1], DataManager.Classes[j]) =
+                        (DataManager.Classes[j], DataManager.Classes[j + 1]);
                 }
 
                 if (j == DataManager.Classes.Count - 1) ImGui.EndDisabled();
                 ImGui.SameLine();
                 if (j == 0) ImGui.BeginDisabled();
-                if (ImGui.ArrowButton("##up" + record.Name, ImGuiDir.Up))
+                if (ImGui.ArrowButton("##up" + record.Code, ImGuiDir.Up))
                 {
-                    var temp = DataManager.Classes[j - 1];
-                    DataManager.Classes[j - 1] = record;
-                    DataManager.Classes[j] = temp;
+                    (DataManager.Classes[j - 1], DataManager.Classes[j]) =
+                        (DataManager.Classes[j], DataManager.Classes[j - 1]);
                 }
 
                 if (j == 0) ImGui.EndDisabled();
@@ -137,12 +136,17 @@ public static class MainUi
                 for (var i = 0; i < record.Prerequisites.Count; i++)
                 {
                     var prereq = record.Prerequisites[i];
+                    ImGui.PushStyleColor(ImGuiCol.Text,
+                        DataManager.Classes.Find(r => r.Code == prereq)!.Done
+                            ? new Vector4(0, 255, 0, 255)
+                            : new Vector4(255, 0, 0, 255));
                     if (ImGui.Button(prereq))
                     {
                         _lastClosed = record.Code;
                         _lastOpened = prereq;
                         Console.WriteLine("Need prereq " + prereq);
                     }
+                    ImGui.PopStyleColor();
                     ImGui.SameLine();
                     if (ImGui.SmallButton("-##" + record.Code + prereq))
                     {
@@ -183,6 +187,44 @@ public static class MainUi
         
         if (_addPrereq) AddPrereqUi.Open(ref _addPrereq, _prereqRecord);
         
+        // Track column
+        ImGui.NextColumn();
+        ImGui.Text("Tracks Registered: ");
+        foreach (var track in DataManager.Tracks)
+        {
+            var node = ImGui.TreeNodeEx(track.Name, ImGuiTreeNodeFlags.Framed | ImGuiTreeNodeFlags.SpanAvailWidth | ImGuiTreeNodeFlags.AllowOverlap);
+            if (!node) continue;
+            
+            ImGui.Text("Track Name: ");
+            var buffer = Encoding.UTF8.GetBytes(track.Name);
+            Array.Resize(ref buffer, 40);
+            ImGui.SameLine();
+            if (ImGui.InputText("##track_name" + track.Name, buffer, 40,
+                    ImGuiInputTextFlags.EnterReturnsTrue))
+            {
+                // TODO: Code duplication fix
+                track.Name = Encoding.Default.GetString(buffer);
+                track.Name = track.Name.Trim('\0');
+            }
+                    
+            foreach (var req in track.Records)
+            {
+                if (ImGui.Button(req.Name))
+                {
+                    _lastOpened = req.Code;
+                }
+
+                ImGui.SameLine();
+                ImGui.Text("Done: ");
+                var done = DataManager.Classes.Find(r => r.Code == req.Code)!.Done;
+                ImGui.SameLine();
+                ImGui.BeginDisabled();
+                ImGui.Checkbox("##checkbox" + req.Code, ref done);
+                ImGui.EndDisabled();
+            }
+        }
+        
+        // Save popup and end
         ImGui.SetNextWindowPos(ImGui.GetIO().DisplaySize / 2 - new Vector2(109F, 23F));
         if (ImGui.BeginPopup("SavePopup", ImGuiWindowFlags.NoDecoration | ImGuiWindowFlags.NoMove))
         {

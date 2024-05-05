@@ -42,7 +42,7 @@ public static class AddClassUi
             ImGui.SameLine();
             ImGui.Checkbox("##done", ref _completed);
             
-            if (ImGui.Button("Submit") && _codeBuffer.Length > 0 && _creditHours > 0)
+            if (ImGui.Button("Submit") && _nameBuffer.Length > 0 && _codeBuffer.Length > 0 && _creditHours > 0)
             {
                 var record = new ClassRecord(_nameBuffer, _codeBuffer.Replace(' ', '-'), _creditHours, 
                     _prereqBuffer.Replace(", ", ",").Replace(' ', '-').Split([',', ' ']).ToList().FindAll(s => s != " " && s != ""),
