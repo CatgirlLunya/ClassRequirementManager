@@ -73,7 +73,11 @@ public static class MainUi
                 _lastClosed = "";
             }
 
+            var avail = record.Prerequisites.All(recordd => DataManager.Classes.Find(r => r.Code == recordd)!.Done) && !record.Done;
+            if (avail) ImGui.PushStyleColor(ImGuiCol.Text, new Vector4(0, 128, 0, 255));
+            else if (!record.Done) ImGui.PushStyleColor(ImGuiCol.Text, new Vector4(255, 0, 0, 255));
             var node = ImGui.TreeNodeEx(record.Name, ImGuiTreeNodeFlags.Framed | ImGuiTreeNodeFlags.SpanAvailWidth | ImGuiTreeNodeFlags.AllowOverlap);
+            if (avail || !record.Done) ImGui.PopStyleColor();
             // Up and down arrows
             {
                 ImGui.SameLine();
@@ -222,6 +226,9 @@ public static class MainUi
                 ImGui.Checkbox("##checkbox" + req.Code, ref done);
                 ImGui.EndDisabled();
             }
+            
+            // TODO: Add requirement button, remove requirements buttons, delete track button
+            ImGui.TreePop();
         }
         
         // Save popup and end
